@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hinglish Fake News Detector</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; text-align: center; }
+        textarea { width: 80%; height: 100px; padding: 10px; margin-bottom: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        #result { margin-top: 20px; font-weight: bold; }
+        footer { margin-top: 50px; font-size: 12px; color: gray; }
+    </style>
+</head>
+<body>
+
+    <h1>Hinglish Fake News Detector</h1>
+    <p>Paste any WhatsApp forward or claim below (Hindi, English, or Hinglish):</p>
+    
+    <textarea id="claimInput" placeholder="Yahan apna text daalein..."></textarea><br>
+    <button onclick="checkNews()">Verify Claim</button>
+
+    <div id="result"></div>
+
+    <footer>
+        <p>Designed by Manish Sharma</p>
+    </footer>
+
+    <script>
+        function checkNews() {
+            const text = document.getElementById('claimInput').value;
+            
+            fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = 
+                    `Prediction: ${data.prediction} <br> Confidence: ${data.confidence} <br> Reason: ${data.explanation}`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
