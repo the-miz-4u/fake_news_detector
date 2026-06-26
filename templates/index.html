@@ -27,21 +27,24 @@
     </footer>
 
     <script>
-        function checkNews() {
-            const text = document.getElementById('claimInput').value;
-            
-            fetch('/predict', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('result').innerHTML = 
-                    `Prediction: ${data.prediction} <br> Confidence: ${data.confidence} <br> Reason: ${data.explanation}`;
-            })
-            .catch(error => console.error('Error:', error));
-        }
-    </script>
+    function checkNews() {
+        const text = document.getElementById('claimInput').value;
+        
+        fetch('/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('result').innerHTML = 
+                `<strong>Prediction:</strong> ${data.prediction} <br><br> 
+                 <strong>Code-Switching Density:</strong> ${data.cs_density} <br>
+                 <strong>Tags:</strong> ${JSON.stringify(data.token_tags)} <br><br>
+                 <strong>Reason:</strong> ${data.explanation}`;
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
 </body>
 </html>
