@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from src.preprocess import preprocess_claim
 from src.language_id import calculate_code_switching_density
+from src.prediction import predict_news
 
 app = Flask(__name__)
 
@@ -13,12 +14,15 @@ def predict():
     data = request.json
     raw_text = data.get('text', '')
     
-    # Stage 1: Text Preprocessing (Noise removal & Transliteration)
+    # Stage 1: Text Preprocessing
     processed_text = preprocess_claim(raw_text)
     
-    # Stage 2: Code-Switching Density (Token-level Language ID)
-    # Original text par density nikalna zyada accurate hota hai
+    # Stage 2: Code-Switching Density
     density, tags = calculate_code_switching_density(raw_text)
+    
+    # Stage 3: AI Model Prediction (Dual-Embedding)
+    # Model ko cleaned text bhejte hain
+    prediction_label, confidence = predict_news(processed_text)
     
     response = {
         "status": "success",
@@ -26,9 +30,9 @@ def predict():
         "processed_claim": processed_text,
         "cs_density": density,
         "token_tags": tags,
-        "prediction": "Pending...", 
-        "confidence": "N/A",
-        "explanation": f"Pipeline Stage 2 Complete. Code-Switching Density is {density}."
+        "prediction": prediction_label, 
+        "confidence": f"{confidence}%",
+        "explanation": f"AI model is {confidence}% confident that this news is {prediction_label}."
     }
     return jsonify(response)
 
