@@ -55,14 +55,12 @@ Due to GitHub's file size limits, the trained model (dual_embedding_model.pth) i
 Place your trained .pth file inside the models/ directory.
 
 4. Run the Flask Server
-
-Bash
 python app.py
+
 5. Access the Web App
 Open your browser and navigate to: http://127.0.0.1:5000
 
-📂 Project Structure
-Plaintext
+Project Structure
 fake_news_detector/
 │
 ├── models/
@@ -75,5 +73,6 @@ fake_news_detector/
 ├── requirements.txt                # Project Dependencies
 ├── .gitignore                      # Git ignore rules (excluding .pth)
 └── README.md                       # Project Documentation
+
 👨‍💻 Author
 Manish Sharma
