@@ -43,24 +43,31 @@ Follow these steps to run the project locally on your machine:
 ```bash
 git clone [https://github.com/your-username/fake_news_detector.git](https://github.com/your-username/fake_news_detector.git)
 cd fake_news_detector
+```
 
-2. Install dependencies
+**2. Install dependencies**
 Make sure you have Python installed, then run:
+```bash
 pip install -r requirements.txt
+```
 
-3. Add the Pre-trained Model
+**3. Add the Pre-trained Model**
+* Due to GitHub's file size limits, the trained model (`dual_embedding_model.pth`) is not included in the repository.
+* Place your trained `.pth` file inside the `models/` directory.
 
-Due to GitHub's file size limits, the trained model (dual_embedding_model.pth) is not included in the repository.
-
-Place your trained .pth file inside the models/ directory.
-
-4. Run the Flask Server
+**4. Run the Flask Server**
+```bash
 python app.py
+```
 
-5. Access the Web App
-Open your browser and navigate to: http://127.0.0.1:5000
+**5. Access the Web App**
+Open your browser and navigate to: `http://127.0.0.1:5000`
 
-Project Structure
+---
+
+## 📂 Project Structure
+
+```text
 fake_news_detector/
 │
 ├── models/
@@ -73,6 +80,10 @@ fake_news_detector/
 ├── requirements.txt                # Project Dependencies
 ├── .gitignore                      # Git ignore rules (excluding .pth)
 └── README.md                       # Project Documentation
+```
 
-👨‍💻 Author
-Manish Sharma
+---
+
+## 👨‍💻 Author
+
+**Manish Sharma**  
