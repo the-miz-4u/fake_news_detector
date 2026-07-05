@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Fake News Detector</title>
-    <!-- Google Fonts for Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * {
@@ -92,7 +91,6 @@
             background: #2980b9;
         }
 
-        /* Loading Spinner CSS */
         .spinner {
             display: none;
             width: 20px;
@@ -113,7 +111,7 @@
             border-radius: 8px;
             font-size: 18px;
             font-weight: 600;
-            display: none; /* Hidden by default */
+            display: none;
             opacity: 0;
             transition: opacity 0.5s ease;
         }
@@ -130,6 +128,33 @@
             border: 1px solid #f5c6cb;
         }
 
+        /* Naya Confidence Bar CSS */
+        .confidence-container {
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .confidence-text {
+            font-size: 14px;
+            font-weight: 400;
+            margin-bottom: 5px;
+        }
+
+        .progress-bg {
+            background: rgba(0,0,0,0.1);
+            border-radius: 5px;
+            height: 10px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 1s ease-in-out;
+            border-radius: 5px;
+        }
+
         .footer {
             margin-top: 30px;
             color: #888;
@@ -143,7 +168,6 @@
         <h1>📰 Verify The News</h1>
         <p class="subtitle">Paste any Hindi or Hinglish claim below to check its authenticity.</p>
 
-        <!-- Form for input -->
         <form id="news-form">
             <textarea id="news-text" placeholder="Enter news text here..." required></textarea>
             <button type="submit" id="submit-btn">
@@ -152,64 +176,79 @@
             </button>
         </form>
 
-        <!-- Result Box -->
-        <div id="result-box"></div>
+        <div id="result-box">
+            <div id="prediction-text"></div>
+            
+            <!-- Naya Confidence Score Section -->
+            <div class="confidence-container">
+                <div class="confidence-text" id="confidence-label">AI Confidence: 0%</div>
+                <div class="progress-bg">
+                    <div class="progress-bar" id="confidence-bar"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Developer Credit -->
     <div class="footer">
         Designed by Manish Sharma
     </div>
 
-    <!-- JavaScript to handle API and Spinner -->
     <script>
         document.getElementById('news-form').addEventListener('submit', async function(e) {
-            e.preventDefault(); // Prevent page reload
+            e.preventDefault();
             
             const newsText = document.getElementById('news-text').value;
             const btnText = document.getElementById('btn-text');
             const spinner = document.getElementById('loading-spinner');
             const resultBox = document.getElementById('result-box');
             const submitBtn = document.getElementById('submit-btn');
+            const predictionText = document.getElementById('prediction-text');
+            const confidenceBar = document.getElementById('confidence-bar');
+            const confidenceLabel = document.getElementById('confidence-label');
 
-            // Show loading state
             btnText.innerText = "Analyzing...";
             spinner.style.display = "block";
             submitBtn.disabled = true;
             resultBox.style.display = "none";
             resultBox.style.opacity = "0";
+            confidenceBar.style.width = "0%";
 
             try {
-                // Send data to Flask Backend
                 const response = await fetch('/predict', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: newsText })
                 });
 
                 const data = await response.json();
 
-                // Display Result
                 resultBox.style.display = "block";
-                setTimeout(() => resultBox.style.opacity = "1", 50); // Smooth fade-in
+                setTimeout(() => resultBox.style.opacity = "1", 50);
 
+                // Update text and colors based on Real or Fake
                 if (data.prediction === "Real") {
                     resultBox.className = "real-news";
-                    resultBox.innerHTML = "✅ This claim appears to be REAL.";
+                    predictionText.innerHTML = "✅ This claim appears to be REAL.";
+                    confidenceBar.style.backgroundColor = "#28a745"; // Green bar
                 } else {
                     resultBox.className = "fake-news";
-                    resultBox.innerHTML = "🚨 This claim appears to be FAKE.";
+                    predictionText.innerHTML = "🚨 This claim appears to be FAKE.";
+                    confidenceBar.style.backgroundColor = "#dc3545"; // Red bar
                 }
+
+                // Update Confidence Score Animation
+                confidenceLabel.innerHTML = `AI Confidence: <strong>${data.confidence}%</strong>`;
+                setTimeout(() => {
+                    confidenceBar.style.width = `${data.confidence}%`;
+                }, 100);
 
             } catch (error) {
                 resultBox.style.display = "block";
                 resultBox.style.opacity = "1";
                 resultBox.className = "fake-news";
-                resultBox.innerHTML = "⚠️ Error connecting to the server.";
+                predictionText.innerHTML = "⚠️ Error connecting to the server.";
+                confidenceLabel.innerHTML = "";
             } finally {
-                // Reset button state
                 btnText.innerText = "Verify Claim";
                 spinner.style.display = "none";
                 submitBtn.disabled = false;
