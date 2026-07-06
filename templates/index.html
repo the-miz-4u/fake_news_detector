@@ -6,160 +6,28 @@
     <title>AI Fake News Detector</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #333;
-        }
-
-        .container {
-            background: white;
-            width: 90%;
-            max-width: 600px;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .container:hover {
-            transform: translateY(-5px);
-        }
-
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 28px;
-            font-weight: 600;
-        }
-
-        p.subtitle {
-            color: #7f8c8d;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 150px;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            resize: none;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.3s ease;
-            background-color: #f9f9f9;
-        }
-
-        textarea:focus {
-            border-color: #3498db;
-            background-color: #fff;
-        }
-
-        button {
-            margin-top: 20px;
-            padding: 12px 25px;
-            font-size: 16px;
-            font-weight: 600;
-            color: white;
-            background: #3498db;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-
-        button:hover {
-            background: #2980b9;
-        }
-
-        .spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        #result-box {
-            margin-top: 25px;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 600;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        .real-news {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .fake-news {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* Naya Confidence Bar CSS */
-        .confidence-container {
-            margin-top: 15px;
-            text-align: left;
-        }
-
-        .confidence-text {
-            font-size: 14px;
-            font-weight: 400;
-            margin-bottom: 5px;
-        }
-
-        .progress-bg {
-            background: rgba(0,0,0,0.1);
-            border-radius: 5px;
-            height: 10px;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            transition: width 1s ease-in-out;
-            border-radius: 5px;
-        }
-
-        .footer {
-            margin-top: 30px;
-            color: #888;
-            font-size: 14px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; padding: 20px; }
+        .container { background: white; width: 100%; max-width: 600px; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); text-align: center; transition: transform 0.3s ease; }
+        .container:hover { transform: translateY(-5px); }
+        h1 { color: #2c3e50; margin-bottom: 10px; font-size: 28px; font-weight: 600; }
+        p.subtitle { color: #7f8c8d; margin-bottom: 25px; font-size: 14px; }
+        textarea { width: 100%; height: 120px; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px; resize: none; font-size: 16px; outline: none; transition: border-color 0.3s ease; background-color: #f9f9f9; }
+        textarea:focus { border-color: #3498db; background-color: #fff; }
+        button { margin-top: 20px; padding: 12px 25px; font-size: 16px; font-weight: 600; color: white; background: #3498db; border: none; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        button:hover { background: #2980b9; }
+        .spinner { display: none; width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #result-box { margin-top: 25px; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: 600; display: none; opacity: 0; transition: opacity 0.5s ease; text-align: left; }
+        .real-news { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fake-news { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .confidence-container { margin-top: 15px; }
+        .confidence-text { font-size: 14px; font-weight: 400; margin-bottom: 5px; }
+        .progress-bg { background: rgba(0,0,0,0.1); border-radius: 5px; height: 10px; width: 100%; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; transition: width 1s ease-in-out; border-radius: 5px; }
+        #explanation-box { margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.1); font-size: 14px; font-weight: 400; display: none; }
+        .ai-badge { display: inline-block; background: #6c5ce7; color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px; margin-bottom: 5px; font-weight: 600; }
+        .footer { margin-top: 30px; color: #888; font-size: 14px; text-align: center; }
     </style>
 </head>
 <body>
@@ -177,14 +45,18 @@
         </form>
 
         <div id="result-box">
-            <div id="prediction-text"></div>
+            <div id="prediction-text" style="text-align: center;"></div>
             
-            <!-- Naya Confidence Score Section -->
             <div class="confidence-container">
                 <div class="confidence-text" id="confidence-label">AI Confidence: 0%</div>
                 <div class="progress-bg">
                     <div class="progress-bar" id="confidence-bar"></div>
                 </div>
+            </div>
+
+            <div id="explanation-box">
+                <span class="ai-badge">✨ AI Reasoning</span>
+                <p id="explanation-text"></p>
             </div>
         </div>
     </div>
@@ -205,15 +77,20 @@
             const predictionText = document.getElementById('prediction-text');
             const confidenceBar = document.getElementById('confidence-bar');
             const confidenceLabel = document.getElementById('confidence-label');
+            const explanationBox = document.getElementById('explanation-box');
+            const explanationText = document.getElementById('explanation-text');
 
+            // Reset UI states
             btnText.innerText = "Analyzing...";
             spinner.style.display = "block";
             submitBtn.disabled = true;
             resultBox.style.display = "none";
+            explanationBox.style.display = "none";
             resultBox.style.opacity = "0";
             confidenceBar.style.width = "0%";
 
             try {
+                // Single request to our Flask backend
                 const response = await fetch('/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -221,33 +98,35 @@
                 });
 
                 const data = await response.json();
+                if (data.error) throw new Error(data.error);
 
+                // UI display setup
                 resultBox.style.display = "block";
                 setTimeout(() => resultBox.style.opacity = "1", 50);
 
-                // Update text and colors based on Real or Fake
                 if (data.prediction === "Real") {
                     resultBox.className = "real-news";
-                    predictionText.innerHTML = "✅ This claim appears to be REAL.";
-                    confidenceBar.style.backgroundColor = "#28a745"; // Green bar
+                    predictionText.innerHTML = "✅ This claim appears to be <strong>REAL</strong>.";
+                    confidenceBar.style.backgroundColor = "#28a745";
                 } else {
                     resultBox.className = "fake-news";
-                    predictionText.innerHTML = "🚨 This claim appears to be FAKE.";
-                    confidenceBar.style.backgroundColor = "#dc3545"; // Red bar
+                    predictionText.innerHTML = "🚨 This claim appears to be <strong>FAKE</strong>.";
+                    confidenceBar.style.backgroundColor = "#dc3545";
                 }
 
-                // Update Confidence Score Animation
                 confidenceLabel.innerHTML = `AI Confidence: <strong>${data.confidence}%</strong>`;
-                setTimeout(() => {
-                    confidenceBar.style.width = `${data.confidence}%`;
-                }, 100);
+                setTimeout(() => { confidenceBar.style.width = `${data.confidence}%`; }, 100);
+
+                // Show Explanation received from backend directly
+                explanationBox.style.display = "block";
+                explanationText.innerHTML = data.explanation;
 
             } catch (error) {
                 resultBox.style.display = "block";
                 resultBox.style.opacity = "1";
                 resultBox.className = "fake-news";
-                predictionText.innerHTML = "⚠️ Error connecting to the server.";
-                confidenceLabel.innerHTML = "";
+                predictionText.innerHTML = "⚠️ Error processing request on server.";
+                explanationBox.style.display = "none";
             } finally {
                 btnText.innerText = "Verify Claim";
                 spinner.style.display = "none";
