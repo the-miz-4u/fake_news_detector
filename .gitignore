@@ -3,3 +3,5 @@ data/*.pth
 *.pth
 .env
 __pycache__/
+instance/
+*.db
