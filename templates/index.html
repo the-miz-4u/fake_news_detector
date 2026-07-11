@@ -98,7 +98,7 @@
 
         textarea {
             width: 100%;
-            height: 150px;
+            height: 120px;
             padding: 15px;
             border: 2px solid var(--border-color);
             border-radius: 10px;
@@ -130,6 +130,43 @@
             background-color: var(--btn-hover);
         }
 
+        /* --- NAYA: Result Box --- */
+        #result-box {
+            display: none;
+            margin-top: 25px;
+            padding: 20px;
+            background-color: var(--container-bg);
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            text-align: left;
+            position: relative;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #copy-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #copy-btn:hover {
+            background-color: #27ae60;
+        }
+
         /* Footer */
         .footer {
             margin-top: 30px;
@@ -141,38 +178,41 @@
 </head>
 <body>
 
-    <!-- Header area containing the Toggle Button -->
     <div class="header">
         <button id="theme-toggle" class="theme-btn">🌙 Dark Mode</button>
     </div>
 
-    <!-- Main Working Area -->
     <div class="main-container">
         <h1>✨ Project Dashboard</h1>
-        <p class="subtitle">Enter your data below to get started with the process.</p>
+        <p class="subtitle">Enter your data below and click submit.</p>
 
         <textarea id="user-input" placeholder="Type something here..."></textarea>
         
-        <button class="action-btn" id="submit-btn">Submit Data</button>
+        <button class="action-btn" id="submit-btn">Process Data</button>
+
+        <div id="result-box">
+            <div class="result-header">
+                <strong>Output Result:</strong>
+                <button id="copy-btn">📋 Copy</button>
+            </div>
+            <p id="output-text"></p>
+        </div>
     </div>
 
-    <!-- Footer Area -->
     <div class="footer">
         Designed by Manish Sharma
     </div>
 
-    <!-- --- JavaScript Logic --- -->
     <script>
+        // ------------------ DARK MODE LOGIC ------------------
         const themeToggleBtn = document.getElementById('theme-toggle');
         const body = document.body;
 
-        // 1. Check local storage on page load
         if (localStorage.getItem('theme') === 'dark') {
             body.classList.add('dark-mode');
             themeToggleBtn.innerText = '☀️ Light Mode';
         }
 
-        // 2. Toggle logic when button is clicked
         themeToggleBtn.addEventListener('click', () => {
             body.classList.toggle('dark-mode');
             
@@ -185,14 +225,40 @@
             }
         });
 
-        // Demo logic for the submit button
+        // ------------------ SUBMIT & COPY LOGIC ------------------
         document.getElementById('submit-btn').addEventListener('click', () => {
             const input = document.getElementById('user-input').value;
+            
             if(input.trim() === "") {
                 alert("Please enter some text first!");
             } else {
-                alert("Data Submitted Successfully!");
+                // Input ko process karke Result box me dikhana
+                document.getElementById('result-box').style.display = 'block';
+                document.getElementById('output-text').innerText = "Processed: " + input;
             }
+        });
+
+        // Copy Button Event Listener
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            // Text nikalna
+            const textToCopy = document.getElementById('output-text').innerText;
+            
+            // System clipboard me dalna
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const copyBtn = document.getElementById('copy-btn');
+                
+                // Success message dikhana
+                copyBtn.innerText = "✅ Copied!";
+                copyBtn.style.backgroundColor = "#27ae60"; // Thoda dark green
+                
+                // 2 second baad wapas normal kar dena
+                setTimeout(() => { 
+                    copyBtn.innerText = "📋 Copy"; 
+                    copyBtn.style.backgroundColor = "#2ecc71";
+                }, 2000);
+            }).catch(err => {
+                alert("Failed to copy! " + err);
+            });
         });
     </script>
 </body>
