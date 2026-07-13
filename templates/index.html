@@ -96,8 +96,21 @@
 
         textarea:focus { border-color: var(--btn-bg); }
 
+        /* --- NAYA: Counter Styling --- */
+        #counter-box {
+            text-align: right;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        body.dark-mode #counter-box {
+            color: #b2bec3;
+        }
+
         .action-btn {
-            margin-top: 20px;
+            margin-top: 15px;
             padding: 12px 25px;
             font-size: 16px;
             font-weight: 600;
@@ -137,7 +150,7 @@
         }
 
         #copy-btn {
-            display: none; /* Starting me hide rahega jab tak type na ho jaye */
+            display: none; 
             background-color: #2ecc71;
             color: white;
             border: none;
@@ -148,7 +161,6 @@
             cursor: pointer;
         }
 
-        /* Typewriter Cursor Animation */
         .cursor {
             display: inline-block;
             width: 3px;
@@ -173,6 +185,10 @@
         <p class="subtitle">Enter your data below and click submit.</p>
 
         <textarea id="user-input" placeholder="Type something here..."></textarea>
+        
+        <div id="counter-box">
+            <span id="char-count">0</span> Characters | <span id="word-count">0</span> Words
+        </div>
         
         <button class="action-btn" id="submit-btn">Process Data</button>
 
@@ -210,6 +226,23 @@
             }
         });
 
+        // --- NAYA: COUNTER LOGIC ---
+        const userInput = document.getElementById('user-input');
+        const charCount = document.getElementById('char-count');
+        const wordCount = document.getElementById('word-count');
+
+        userInput.addEventListener('input', () => {
+            const text = userInput.value;
+            
+            // Character count update
+            charCount.innerText = text.length;
+            
+            // Word count update
+            // Agar box khali hai toh 0 dikhaye, nahi toh words ko space se split karke count kare
+            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            wordCount.innerText = words;
+        });
+
         // --- TYPEWRITER & SUBMIT LOGIC ---
         const submitBtn = document.getElementById('submit-btn');
         const copyBtn = document.getElementById('copy-btn');
@@ -217,18 +250,17 @@
         const resultBox = document.getElementById('result-box');
 
         submitBtn.addEventListener('click', () => {
-            const input = document.getElementById('user-input').value;
+            const input = userInput.value;
             
             if(input.trim() === "") {
                 alert("Please enter some text first!");
                 return;
             }
             
-            // Setup UI for typing
             resultBox.style.display = 'block';
             outputText.innerHTML = ""; 
-            copyBtn.style.display = 'none'; // Hide copy button while typing
-            submitBtn.disabled = true; // Disable button to prevent double clicks
+            copyBtn.style.display = 'none'; 
+            submitBtn.disabled = true; 
             submitBtn.innerText = "Generating...";
 
             const fullText = "Analyzing input... Here is your processed result:\n\n" + input;
@@ -236,20 +268,18 @@
 
             function typeWriter() {
                 if (index < fullText.length) {
-                    // Agar line break (\n) hai toh usko <br> me convert karna padega HTML ke liye
                     if (fullText.charAt(index) === '\n') {
                         outputText.innerHTML += '<br>';
                     } else {
                         outputText.innerHTML += fullText.charAt(index);
                     }
                     index++;
-                    setTimeout(typeWriter, 25); // 25 milliseconds ki speed (yahan se speed kam-zyada kar sakte ho)
+                    setTimeout(typeWriter, 25); 
                 } else {
-                    // Type hone ke baad cursor add karna aur UI normal karna
                     outputText.innerHTML += '<span class="cursor"></span>';
                     submitBtn.disabled = false;
                     submitBtn.innerText = "Process Data";
-                    copyBtn.style.display = 'inline-block'; // Show copy button
+                    copyBtn.style.display = 'inline-block'; 
                 }
             }
             
@@ -258,7 +288,6 @@
 
         // --- COPY LOGIC ---
         copyBtn.addEventListener('click', () => {
-            // Cursor span ko hatakar sirf text nikalna
             const textToCopy = outputText.innerText; 
             
             navigator.clipboard.writeText(textToCopy).then(() => {
