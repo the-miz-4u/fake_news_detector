@@ -43,51 +43,50 @@ def predict():
     input_text = data.get('text', '').strip()
     
     try:
-        # --- NAYA: URL Detection aur Web Scraping ---
-        # Check karna ki text koi link (URL) toh nahi hai
+        # FALLBACK: Start mein hi assign kar do taaki UnboundLocalError kabhi na aaye
+        text_to_analyze = input_text
+        display_text = input_text
+
+        # URL Detection aur Web Scraping logic
         url_pattern = re.compile(r'^https?://\S+$', re.IGNORECASE)
         
         if url_pattern.match(input_text):
-            # Agar URL hai, toh usko scrape karo
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
             response = requests.get(input_text, headers=headers, timeout=10)
             soup = BeautifulSoup(response.content, 'html.parser')
             
-            # Website ke saare paragraphs (<p> tags) nikalna
             paragraphs = soup.find_all('p')
             scraped_text = " ".join([p.get_text() for p in paragraphs])
             
             if not scraped_text.strip():
                 return jsonify({"error": "Website se koi text nahi nikal paya."}), 400
             
-            # --- NAYA: Text Cleaning (Noise hatao) ---
-            # Wikipedia ke [1], [2] jaise references ko remove karna
+            # Wikipedia ke [1], [2] jaise references remove karna aur text clean karna
             clean_text = re.sub(r'\[\d+\]', '', scraped_text)
-            
-            # Model ke liye text ko limit karna (Sirf pehla main para bhejna, approx 500 chars)
             text_to_analyze = clean_text[:500].strip() 
             display_text = f"[Scraped from URL] {text_to_analyze[:100]}..."
 
-        # --------------------------------------------
-
-        # 1. Prediction lena
+        # 1. Local PyTorch Model se Prediction lena
+        # Ab yahan error nahi aayega kyunki variable humesha defined rahega
         result, confidence = predict_news(text_to_analyze) 
         
-        # 2. Gemini Explanation
+        # 2. Gemini 2.5 Flash se Hinglish Explanation lena
         prompt = f"You are a fact-checking assistant. The following news claim is predicted to be {result}. Briefly explain in 2-3 sentences in Hinglish why this might be {result}. News: \"{text_to_analyze}\""
+        
         ai_response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt,
         )
         explanation = ai_response.text
         
-        # 3. Database me record save karna (UI me display_text dikhayenge)
+        # 3. Database me record save karna
         new_search = SearchHistory(text=display_text, prediction=result, confidence=confidence)
         db.session.add(new_search)
         db.session.commit()
             
     except Exception as e:
         print("Backend Error:", str(e))
+        # Tumhara custom error message style
         return jsonify({"error": f"Kuch galat ho gaya: {str(e)}"}), 500
     
     return jsonify({

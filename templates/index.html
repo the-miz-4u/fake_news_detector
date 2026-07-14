@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Awesome Project</title>
+    <title>AI Fake News Detector</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         /* --- CSS Variables --- */
@@ -16,7 +16,6 @@
             --btn-hover: #2980b9;
         }
 
-        /* --- Dark Mode Variables --- */
         body.dark-mode {
             --bg-color: #121212;
             --text-color: #ffffff;
@@ -27,146 +26,95 @@
         }
 
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0; padding: 0; box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            background-color: var(--bg-color); color: var(--text-color);
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px;
         }
 
         .header {
-            width: 100%;
-            max-width: 700px;
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 20px;
+            width: 100%; max-width: 700px; display: flex;
+            justify-content: flex-end; margin-bottom: 20px;
         }
 
         .theme-btn {
-            padding: 10px 18px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            background-color: var(--container-bg);
-            color: var(--text-color);
+            padding: 10px 18px; border-radius: 8px; border: none;
+            cursor: pointer; font-weight: 600;
+            background-color: var(--container-bg); color: var(--text-color);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
         }
 
         .main-container {
-            background-color: var(--container-bg);
-            width: 100%;
-            max-width: 700px;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            text-align: center;
+            background-color: var(--container-bg); width: 100%;
+            max-width: 700px; padding: 40px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); text-align: center;
         }
 
         h1 { margin-bottom: 10px; font-size: 28px; font-weight: 600; }
         p.subtitle { color: #7f8c8d; margin-bottom: 25px; font-size: 14px; }
 
-        textarea {
-            width: 100%;
-            height: 120px;
-            padding: 15px;
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            resize: none;
-            font-size: 16px;
-            outline: none;
-            background-color: transparent;
-            color: var(--text-color);
-        }
+        .input-wrapper { position: relative; width: 100%; }
 
+        textarea {
+            width: 100%; height: 120px; padding: 15px; padding-right: 40px;
+            border: 2px solid var(--border-color); border-radius: 10px;
+            resize: none; font-size: 16px; outline: none;
+            background-color: transparent; color: var(--text-color);
+        }
         textarea:focus { border-color: var(--btn-bg); }
 
-        /* --- NAYA: Counter Styling --- */
-        #counter-box {
-            text-align: right;
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-top: 5px;
-            font-weight: 600;
+        #mic-btn {
+            position: absolute; bottom: 15px; right: 15px;
+            background: none; border: none; font-size: 20px;
+            cursor: pointer; transition: transform 0.2s ease; outline: none;
+        }
+        #mic-btn.recording { animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(1); filter: grayscale(0%); }
+            50% { transform: scale(1.2); filter: drop-shadow(0 0 5px red); }
+            100% { transform: scale(1); filter: grayscale(0%); }
         }
 
-        body.dark-mode #counter-box {
-            color: #b2bec3;
+        #counter-box {
+            text-align: right; font-size: 12px; color: #7f8c8d;
+            margin-top: 5px; font-weight: 600;
         }
+        body.dark-mode #counter-box { color: #b2bec3; }
 
         .action-btn {
-            margin-top: 15px;
-            padding: 12px 25px;
-            font-size: 16px;
-            font-weight: 600;
-            color: white;
-            background-color: var(--btn-bg);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
+            margin-top: 15px; padding: 12px 25px; font-size: 16px;
+            font-weight: 600; color: white; background-color: var(--btn-bg);
+            border: none; border-radius: 8px; cursor: pointer; width: 100%;
         }
-        
-        .action-btn:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-
-        .action-btn:hover:not(:disabled) { background-color: var(--btn-hover); }
+        .action-btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
 
         #result-box {
-            display: none;
-            margin-top: 25px;
-            padding: 20px;
+            display: none; margin-top: 25px; padding: 20px;
             background-color: var(--container-bg);
-            border: 2px dashed var(--border-color);
-            border-radius: 10px;
-            text-align: left;
-            position: relative;
+            border: 2px dashed var(--border-color); border-radius: 10px;
+            text-align: left; position: relative;
         }
 
         .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; padding-bottom: 10px;
             border-bottom: 1px solid var(--border-color);
         }
 
         #copy-btn {
-            display: none; 
-            background-color: #2ecc71;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
+            display: none; background-color: #2ecc71; color: white;
+            border: none; padding: 6px 12px; border-radius: 6px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
         }
 
         .cursor {
-            display: inline-block;
-            width: 3px;
-            height: 15px;
-            background-color: var(--text-color);
-            margin-left: 2px;
+            display: inline-block; width: 3px; height: 15px;
+            background-color: var(--text-color); margin-left: 2px;
             animation: blink 0.7s infinite;
         }
         @keyframes blink { 50% { opacity: 0; } }
@@ -181,20 +129,23 @@
     </div>
 
     <div class="main-container">
-        <h1>✨ Project Dashboard</h1>
-        <p class="subtitle">Enter your data below and click submit.</p>
+        <h1>✨ AI Fact Checker</h1>
+        <p class="subtitle">Type or speak a news claim below to check its authenticity.</p>
 
-        <textarea id="user-input" placeholder="Type something here..."></textarea>
+        <div class="input-wrapper">
+            <textarea id="user-input" placeholder="Enter Hindi/Hinglish news or paste a URL..."></textarea>
+            <button id="mic-btn" title="Click to Speak">🎤</button>
+        </div>
         
         <div id="counter-box">
             <span id="char-count">0</span> Characters | <span id="word-count">0</span> Words
         </div>
         
-        <button class="action-btn" id="submit-btn">Process Data</button>
+        <button class="action-btn" id="submit-btn">Verify Claim</button>
 
         <div id="result-box">
             <div class="result-header">
-                <strong>Output Result:</strong>
+                <strong>AI Analysis Result:</strong>
                 <button id="copy-btn">📋 Copy</button>
             </div>
             <p id="output-text"></p>
@@ -209,97 +160,119 @@
         // --- DARK MODE LOGIC ---
         const themeToggleBtn = document.getElementById('theme-toggle');
         const body = document.body;
-
         if (localStorage.getItem('theme') === 'dark') {
             body.classList.add('dark-mode');
             themeToggleBtn.innerText = '☀️ Light Mode';
         }
-
         themeToggleBtn.addEventListener('click', () => {
             body.classList.toggle('dark-mode');
             if (body.classList.contains('dark-mode')) {
-                localStorage.setItem('theme', 'dark'); 
-                themeToggleBtn.innerText = '☀️ Light Mode'; 
+                localStorage.setItem('theme', 'dark'); themeToggleBtn.innerText = '☀️ Light Mode'; 
             } else {
-                localStorage.setItem('theme', 'light'); 
-                themeToggleBtn.innerText = '🌙 Dark Mode';
+                localStorage.setItem('theme', 'light'); themeToggleBtn.innerText = '🌙 Dark Mode';
             }
         });
 
-        // --- NAYA: COUNTER LOGIC ---
+        // --- COUNTER LOGIC ---
         const userInput = document.getElementById('user-input');
         const charCount = document.getElementById('char-count');
         const wordCount = document.getElementById('word-count');
-
-        userInput.addEventListener('input', () => {
+        function updateCounter() {
             const text = userInput.value;
-            
-            // Character count update
             charCount.innerText = text.length;
-            
-            // Word count update
-            // Agar box khali hai toh 0 dikhaye, nahi toh words ko space se split karke count kare
-            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-            wordCount.innerText = words;
-        });
+            wordCount.innerText = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        }
+        userInput.addEventListener('input', updateCounter);
 
-        // --- TYPEWRITER & SUBMIT LOGIC ---
+        // --- VOICE INPUT LOGIC ---
+        const micBtn = document.getElementById('mic-btn');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false; recognition.lang = 'hi-IN'; // Hindi/Hinglish supported
+            micBtn.addEventListener('click', () => recognition.start());
+            recognition.onstart = () => micBtn.classList.add('recording');
+            recognition.onspeechend = () => { recognition.stop(); micBtn.classList.remove('recording'); };
+            recognition.onresult = (event) => {
+                userInput.value += (userInput.value ? " " : "") + event.results[0][0].transcript; 
+                updateCounter();
+            };
+            recognition.onerror = () => micBtn.classList.remove('recording');
+        } else {
+            micBtn.style.display = "none";
+        }
+
+        // --- ASLI API FETCH + TYPEWRITER LOGIC ---
         const submitBtn = document.getElementById('submit-btn');
         const copyBtn = document.getElementById('copy-btn');
         const outputText = document.getElementById('output-text');
         const resultBox = document.getElementById('result-box');
 
-        submitBtn.addEventListener('click', () => {
+        submitBtn.addEventListener('click', async () => {
             const input = userInput.value;
+            if(input.trim() === "") { alert("Please enter some text first!"); return; }
             
-            if(input.trim() === "") {
-                alert("Please enter some text first!");
-                return;
-            }
-            
+            // UI Preparation
             resultBox.style.display = 'block';
-            outputText.innerHTML = ""; 
+            outputText.innerHTML = "Connecting to AI Model... <span class='cursor'></span>"; 
             copyBtn.style.display = 'none'; 
             submitBtn.disabled = true; 
-            submitBtn.innerText = "Generating...";
+            submitBtn.innerText = "Analyzing Backend...";
 
-            const fullText = "Analyzing input... Here is your processed result:\n\n" + input;
-            let index = 0;
+            try {
+                // Asli Backend Call
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: input })
+                });
+                
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
 
-            function typeWriter() {
-                if (index < fullText.length) {
-                    if (fullText.charAt(index) === '\n') {
-                        outputText.innerHTML += '<br>';
+                // Format the final text based on real backend response
+                const label = data.prediction === "Real" ? "✅ REAL" : "🚨 FAKE";
+                const fullText = `Prediction: ${label} (Confidence: ${data.confidence}%)\n\n✨ AI Reasoning:\n${data.explanation}`;
+                
+                outputText.innerHTML = ""; // Clear loader text
+                let index = 0;
+
+                // Typewriter logic for real data
+                function typeWriter() {
+                    if (index < fullText.length) {
+                        if (fullText.charAt(index) === '\n') {
+                            outputText.innerHTML += '<br>';
+                        } else {
+                            outputText.innerHTML += fullText.charAt(index);
+                        }
+                        index++;
+                        setTimeout(typeWriter, 15); // Typewriter speed
                     } else {
-                        outputText.innerHTML += fullText.charAt(index);
+                        outputText.innerHTML += '<span class="cursor"></span>';
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "Verify Claim";
+                        copyBtn.style.display = 'inline-block'; 
                     }
-                    index++;
-                    setTimeout(typeWriter, 25); 
-                } else {
-                    outputText.innerHTML += '<span class="cursor"></span>';
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = "Process Data";
-                    copyBtn.style.display = 'inline-block'; 
                 }
+                typeWriter();
+
+            } catch (error) {
+                outputText.innerHTML = `⚠️ Backend Error: ${error.message}`;
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Verify Claim";
             }
-            
-            typeWriter();
         });
 
         // --- COPY LOGIC ---
         copyBtn.addEventListener('click', () => {
             const textToCopy = outputText.innerText; 
-            
             navigator.clipboard.writeText(textToCopy).then(() => {
                 copyBtn.innerText = "✅ Copied!";
                 copyBtn.style.backgroundColor = "#27ae60";
-                
                 setTimeout(() => { 
                     copyBtn.innerText = "📋 Copy"; 
                     copyBtn.style.backgroundColor = "#2ecc71";
                 }, 2000);
-            }).catch(err => {
-                alert("Failed to copy! " + err);
             });
         });
     </script>
