@@ -86,12 +86,25 @@
         }
         body.dark-mode #counter-box { color: #b2bec3; }
 
+        /* --- NAYA: Button Group & Clear Button --- */
+        .button-group {
+            display: flex; gap: 10px; margin-top: 15px; width: 100%;
+        }
+
         .action-btn {
-            margin-top: 15px; padding: 12px 25px; font-size: 16px;
-            font-weight: 600; color: white; background-color: var(--btn-bg);
-            border: none; border-radius: 8px; cursor: pointer; width: 100%;
+            padding: 12px 25px; font-size: 16px; font-weight: 600;
+            color: white; background-color: var(--btn-bg);
+            border: none; border-radius: 8px; cursor: pointer; flex: 3;
         }
         .action-btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
+
+        .clear-btn {
+            padding: 12px 15px; font-size: 16px; font-weight: 600;
+            color: white; background-color: #e74c3c;
+            border: none; border-radius: 8px; cursor: pointer; flex: 1;
+            transition: background-color 0.3s ease;
+        }
+        .clear-btn:hover { background-color: #c0392b; }
 
         #result-box {
             display: none; margin-top: 25px; padding: 20px;
@@ -141,7 +154,10 @@
             <span id="char-count">0</span> Characters | <span id="word-count">0</span> Words
         </div>
         
-        <button class="action-btn" id="submit-btn">Verify Claim</button>
+        <div class="button-group">
+            <button class="action-btn" id="submit-btn">Verify Claim</button>
+            <button class="clear-btn" id="clear-btn">🗑️ Clear</button>
+        </div>
 
         <div id="result-box">
             <div class="result-header">
@@ -202,17 +218,34 @@
             micBtn.style.display = "none";
         }
 
-        // --- ASLI API FETCH + TYPEWRITER LOGIC ---
+        // --- NAYA: CLEAR BUTTON LOGIC ---
+        const clearBtn = document.getElementById('clear-btn');
+        const resultBox = document.getElementById('result-box');
+        const outputText = document.getElementById('output-text');
         const submitBtn = document.getElementById('submit-btn');
         const copyBtn = document.getElementById('copy-btn');
-        const outputText = document.getElementById('output-text');
-        const resultBox = document.getElementById('result-box');
 
+        clearBtn.addEventListener('click', () => {
+            // Text area saaf karna
+            userInput.value = "";
+            
+            // Counter reset karna
+            updateCounter();
+            
+            // Output box chupana aur reset karna
+            resultBox.style.display = 'none';
+            outputText.innerHTML = "";
+            
+            // Submit button ko uski normal state me lana
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Verify Claim";
+        });
+
+        // --- ASLI API FETCH + TYPEWRITER LOGIC ---
         submitBtn.addEventListener('click', async () => {
             const input = userInput.value;
             if(input.trim() === "") { alert("Please enter some text first!"); return; }
             
-            // UI Preparation
             resultBox.style.display = 'block';
             outputText.innerHTML = "Connecting to AI Model... <span class='cursor'></span>"; 
             copyBtn.style.display = 'none'; 
@@ -220,7 +253,6 @@
             submitBtn.innerText = "Analyzing Backend...";
 
             try {
-                // Asli Backend Call
                 const response = await fetch('/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -230,14 +262,12 @@
                 const data = await response.json();
                 if (data.error) throw new Error(data.error);
 
-                // Format the final text based on real backend response
                 const label = data.prediction === "Real" ? "✅ REAL" : "🚨 FAKE";
                 const fullText = `Prediction: ${label} (Confidence: ${data.confidence}%)\n\n✨ AI Reasoning:\n${data.explanation}`;
                 
-                outputText.innerHTML = ""; // Clear loader text
+                outputText.innerHTML = ""; 
                 let index = 0;
 
-                // Typewriter logic for real data
                 function typeWriter() {
                     if (index < fullText.length) {
                         if (fullText.charAt(index) === '\n') {
@@ -246,7 +276,7 @@
                             outputText.innerHTML += fullText.charAt(index);
                         }
                         index++;
-                        setTimeout(typeWriter, 15); // Typewriter speed
+                        setTimeout(typeWriter, 15); 
                     } else {
                         outputText.innerHTML += '<span class="cursor"></span>';
                         submitBtn.disabled = false;
