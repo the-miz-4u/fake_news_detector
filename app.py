@@ -107,5 +107,26 @@ def get_history():
         })
     return jsonify(history_data)
 
+# --- NAYA: Recent History Fetch Karne Ka Route ---
+@app.route('/history', methods=['GET'])
+def get_history():
+    try:
+        # Database se latest 5 searches nikalna (id ke descending order mein)
+        recent_searches = SearchHistory.query.order_by(SearchHistory.id.desc()).limit(5).all()
+        
+        history_list = []
+        for item in recent_searches:
+            history_list.append({
+                "id": item.id,
+                "text": item.text[:80] + "..." if len(item.text) > 80 else item.text, # Zyada lamba text truncate karna
+                "prediction": item.prediction,
+                "confidence": item.confidence
+            })
+            
+        return jsonify(history_list)
+    except Exception as e:
+        print("History Fetch Error:", str(e))
+        return jsonify({"error": "History laane mein problem hui."}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)

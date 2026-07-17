@@ -34,7 +34,7 @@
         body {
             background-color: var(--bg-color); color: var(--text-color);
             min-height: 100vh; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; padding: 20px;
+            align-items: center; justify-content: flex-start; padding: 40px 20px;
         }
 
         .header {
@@ -49,10 +49,11 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .main-container {
+        .main-container, .history-container {
             background-color: var(--container-bg); width: 100%;
             max-width: 700px; padding: 40px; border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); text-align: center;
+            margin-bottom: 20px;
         }
 
         h1 { margin-bottom: 10px; font-size: 28px; font-weight: 600; }
@@ -105,7 +106,7 @@
 
         #result-box {
             display: none; margin-top: 25px; padding: 20px;
-            background-color: var(--container-bg);
+            background-color: var(--bg-color); /* Thoda alag dikhne ke liye */
             border: 2px dashed var(--border-color); border-radius: 10px;
             text-align: left; position: relative;
         }
@@ -122,40 +123,50 @@
             font-size: 12px; font-weight: 600; cursor: pointer;
         }
 
-        /* --- NAYA: Animated Confidence Meter Styling --- */
         #prediction-badge {
             font-size: 20px; font-weight: bold; margin-bottom: 10px; display: none;
         }
         
-        .confidence-container {
-            margin-top: 10px; margin-bottom: 20px; display: none;
-        }
-        
+        .confidence-container { margin-top: 10px; margin-bottom: 20px; display: none; }
         .confidence-header {
             display: flex; justify-content: space-between; font-size: 14px; 
             font-weight: 600; margin-bottom: 5px;
         }
-        
         .progress-bg {
             background: rgba(0,0,0,0.1); border-radius: 6px; height: 12px; 
             width: 100%; overflow: hidden;
         }
-        
         body.dark-mode .progress-bg { background: rgba(255,255,255,0.1); }
-        
         .progress-bar {
             height: 100%; width: 0%; border-radius: 6px; 
-            transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth Slide Animation */
+            transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1); 
         }
 
+        /* --- NAYA: History Section Styling --- */
+        .history-container { padding: 25px; text-align: left; }
+        .history-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;}
+        .history-list { list-style: none; }
+        .history-item {
+            padding: 12px; border: 1px solid var(--border-color);
+            border-radius: 8px; margin-bottom: 10px; font-size: 14px;
+            display: flex; flex-direction: column; gap: 8px;
+            background-color: var(--bg-color);
+        }
+        .history-top { display: flex; justify-content: space-between; align-items: center; }
+        .history-badge {
+            padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white;
+        }
+        .badge-real { background-color: #2ecc71; }
+        .badge-fake { background-color: #e74c3c; }
+        .history-text { color: var(--text-color); font-style: italic; opacity: 0.9; }
+        
         .cursor {
             display: inline-block; width: 3px; height: 15px;
             background-color: var(--text-color); margin-left: 2px;
             animation: blink 0.7s infinite;
         }
         @keyframes blink { 50% { opacity: 0; } }
-
-        .footer { margin-top: 30px; font-size: 14px; opacity: 0.7; }
+        .footer { margin-top: 10px; font-size: 14px; opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -164,6 +175,7 @@
         <button id="theme-toggle" class="theme-btn">🌙 Dark Mode</button>
     </div>
 
+    <!-- MAIN WORKING AREA -->
     <div class="main-container">
         <h1>✨ AI Fact Checker</h1>
         <p class="subtitle">Type or speak a news claim below to check its authenticity.</p>
@@ -203,6 +215,14 @@
         </div>
     </div>
 
+    <!-- --- NAYA: RECENT HISTORY AREA --- -->
+    <div class="history-container">
+        <h2 class="history-title">🕒 Recent Searches</h2>
+        <ul class="history-list" id="history-list">
+            <li class="history-item">Loading history...</li>
+        </ul>
+    </div>
+
     <div class="footer">
         Designed by Manish Sharma
     </div>
@@ -223,6 +243,46 @@
                 localStorage.setItem('theme', 'light'); themeToggleBtn.innerText = '🌙 Dark Mode';
             }
         });
+
+        // --- HISTORY FETCH LOGIC ---
+        const historyList = document.getElementById('history-list');
+        
+        async function loadHistory() {
+            try {
+                const response = await fetch('/history');
+                const data = await response.json();
+                
+                historyList.innerHTML = ""; // Clear loader
+                
+                if (data.length === 0) {
+                    historyList.innerHTML = "<li class='history-item'>No recent searches found.</li>";
+                    return;
+                }
+
+                data.forEach(item => {
+                    const isReal = item.prediction === "Real";
+                    const badgeClass = isReal ? "badge-real" : "badge-fake";
+                    const badgeText = isReal ? "✅ REAL" : "🚨 FAKE";
+                    
+                    const li = document.createElement('li');
+                    li.className = 'history-item';
+                    li.innerHTML = `
+                        <div class="history-top">
+                            <span class="history-badge ${badgeClass}">${badgeText}</span>
+                            <span style="font-size: 12px; font-weight: 600;">Conf: ${item.confidence}%</span>
+                        </div>
+                        <div class="history-text">"${item.text}"</div>
+                    `;
+                    historyList.appendChild(li);
+                });
+            } catch (error) {
+                historyList.innerHTML = "<li class='history-item'>Failed to load history.</li>";
+            }
+        }
+
+        // Jab page pehli baar load ho, history mangwa lo
+        window.addEventListener('DOMContentLoaded', loadHistory);
+
 
         // --- COUNTER LOGIC ---
         const userInput = document.getElementById('user-input');
@@ -259,8 +319,6 @@
         const outputText = document.getElementById('output-text');
         const submitBtn = document.getElementById('submit-btn');
         const copyBtn = document.getElementById('copy-btn');
-        
-        // Confidence meter variables
         const predictionBadge = document.getElementById('prediction-badge');
         const confidenceContainer = document.getElementById('confidence-container');
         const confidenceBar = document.getElementById('confidence-bar');
@@ -273,8 +331,6 @@
             outputText.innerHTML = "";
             submitBtn.disabled = false;
             submitBtn.innerText = "Verify Claim";
-            
-            // Meter hide karna
             predictionBadge.style.display = 'none';
             confidenceContainer.style.display = 'none';
             confidenceBar.style.width = '0%';
@@ -285,14 +341,12 @@
             const input = userInput.value;
             if(input.trim() === "") { alert("Please enter some text first!"); return; }
             
-            // UI pre-setup for loading
             resultBox.style.display = 'block';
             outputText.innerHTML = "Connecting to AI Model... <span class='cursor'></span>"; 
             copyBtn.style.display = 'none'; 
             submitBtn.disabled = true; 
             submitBtn.innerText = "Analyzing Backend...";
             
-            // Reset meter while loading
             predictionBadge.style.display = 'none';
             confidenceContainer.style.display = 'none';
             confidenceBar.style.width = '0%';
@@ -307,10 +361,9 @@
                 const data = await response.json();
                 if (data.error) throw new Error(data.error);
 
-                // --- NAYA: Confidence Meter Display Logic ---
                 const isReal = data.prediction === "Real";
                 const labelText = isReal ? "✅ PREDICTION: REAL" : "🚨 PREDICTION: FAKE";
-                const barColor = isReal ? "#2ecc71" : "#e74c3c"; // Green or Red
+                const barColor = isReal ? "#2ecc71" : "#e74c3c"; 
                 
                 predictionBadge.innerText = labelText;
                 predictionBadge.style.color = barColor;
@@ -319,13 +372,11 @@
                 confidencePercentage.innerText = `${data.confidence}%`;
                 confidenceContainer.style.display = 'block';
                 
-                // Slight delay for smooth CSS transition
                 setTimeout(() => {
                     confidenceBar.style.backgroundColor = barColor;
                     confidenceBar.style.width = `${data.confidence}%`;
                 }, 100);
                 
-                // Ab typewriter sirf explanation type karega
                 const fullText = `✨ AI Reasoning:\n${data.explanation}`;
                 outputText.innerHTML = ""; 
                 let index = 0;
@@ -344,6 +395,9 @@
                         submitBtn.disabled = false;
                         submitBtn.innerText = "Verify Claim";
                         copyBtn.style.display = 'inline-block'; 
+                        
+                        // NAYA: Typewriter khatam hone ke baad history update kar do
+                        loadHistory();
                     }
                 }
                 typeWriter();
@@ -355,12 +409,11 @@
             }
         });
 
-        // --- COPY LOGIC (Updated to copy badge and confidence too) ---
+        // --- COPY LOGIC ---
         copyBtn.addEventListener('click', () => {
             const badgeText = predictionBadge.innerText;
             const confText = confidencePercentage.innerText;
             const explanationText = outputText.innerText;
-            
             const textToCopy = `${badgeText} (Confidence: ${confText})\n\n${explanationText}`;
             
             navigator.clipboard.writeText(textToCopy).then(() => {
