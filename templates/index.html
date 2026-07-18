@@ -106,7 +106,7 @@
 
         #result-box {
             display: none; margin-top: 25px; padding: 20px;
-            background-color: var(--bg-color); /* Thoda alag dikhne ke liye */
+            background-color: var(--bg-color); 
             border: 2px dashed var(--border-color); border-radius: 10px;
             text-align: left; position: relative;
         }
@@ -142,7 +142,22 @@
             transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1); 
         }
 
-        /* --- NAYA: History Section Styling --- */
+        /* --- NAYA: Feedback Section Styling --- */
+        #feedback-box {
+            display: none; margin-top: 20px; padding-top: 15px;
+            border-top: 1px solid var(--border-color); text-align: center;
+        }
+        .feedback-text { font-size: 14px; margin-bottom: 10px; font-weight: 600; }
+        .feedback-btn {
+            background-color: var(--container-bg); border: 1px solid var(--border-color);
+            color: var(--text-color); padding: 8px 15px; border-radius: 20px;
+            cursor: pointer; font-size: 14px; margin: 0 5px; transition: all 0.2s ease;
+        }
+        .feedback-btn:hover { background-color: var(--bg-color); transform: scale(1.05); }
+        .feedback-btn.active-up { background-color: #2ecc71; color: white; border-color: #2ecc71; }
+        .feedback-btn.active-down { background-color: #e74c3c; color: white; border-color: #e74c3c; }
+        #feedback-msg { display: none; font-size: 13px; color: #2ecc71; margin-top: 10px; font-weight: 600; }
+
         .history-container { padding: 25px; text-align: left; }
         .history-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;}
         .history-list { list-style: none; }
@@ -212,10 +227,18 @@
             </div>
 
             <p id="output-text"></p>
+
+            <!-- --- NAYA: Feedback UI --- -->
+            <div id="feedback-box">
+                <p class="feedback-text">Did our AI get this right?</p>
+                <button class="feedback-btn" id="thumb-up">👍 Yes</button>
+                <button class="feedback-btn" id="thumb-down">👎 No</button>
+                <p id="feedback-msg">Thanks! This helps train our AI.</p>
+            </div>
         </div>
     </div>
 
-    <!-- --- NAYA: RECENT HISTORY AREA --- -->
+    <!-- RECENT HISTORY AREA -->
     <div class="history-container">
         <h2 class="history-title">🕒 Recent Searches</h2>
         <ul class="history-list" id="history-list">
@@ -228,7 +251,7 @@
     </div>
 
     <script>
-        // --- DARK MODE LOGIC ---
+        // --- THEME LOGIC ---
         const themeToggleBtn = document.getElementById('theme-toggle');
         const body = document.body;
         if (localStorage.getItem('theme') === 'dark') {
@@ -246,24 +269,19 @@
 
         // --- HISTORY FETCH LOGIC ---
         const historyList = document.getElementById('history-list');
-        
         async function loadHistory() {
             try {
                 const response = await fetch('/history');
                 const data = await response.json();
-                
-                historyList.innerHTML = ""; // Clear loader
-                
+                historyList.innerHTML = ""; 
                 if (data.length === 0) {
                     historyList.innerHTML = "<li class='history-item'>No recent searches found.</li>";
                     return;
                 }
-
                 data.forEach(item => {
                     const isReal = item.prediction === "Real";
                     const badgeClass = isReal ? "badge-real" : "badge-fake";
                     const badgeText = isReal ? "✅ REAL" : "🚨 FAKE";
-                    
                     const li = document.createElement('li');
                     li.className = 'history-item';
                     li.innerHTML = `
@@ -279,10 +297,7 @@
                 historyList.innerHTML = "<li class='history-item'>Failed to load history.</li>";
             }
         }
-
-        // Jab page pehli baar load ho, history mangwa lo
         window.addEventListener('DOMContentLoaded', loadHistory);
-
 
         // --- COUNTER LOGIC ---
         const userInput = document.getElementById('user-input');
@@ -295,7 +310,7 @@
         }
         userInput.addEventListener('input', updateCounter);
 
-        // --- VOICE INPUT LOGIC ---
+        // --- VOICE LOGIC ---
         const micBtn = document.getElementById('mic-btn');
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
@@ -313,7 +328,7 @@
             micBtn.style.display = "none";
         }
 
-        // --- CLEAR BUTTON LOGIC ---
+        // --- CLEAR & FEEDBACK VARIABLES ---
         const clearBtn = document.getElementById('clear-btn');
         const resultBox = document.getElementById('result-box');
         const outputText = document.getElementById('output-text');
@@ -323,6 +338,16 @@
         const confidenceContainer = document.getElementById('confidence-container');
         const confidenceBar = document.getElementById('confidence-bar');
         const confidencePercentage = document.getElementById('confidence-percentage');
+        
+        // Feedback DOM elements
+        const feedbackBox = document.getElementById('feedback-box');
+        const thumbUp = document.getElementById('thumb-up');
+        const thumbDown = document.getElementById('thumb-down');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        
+        // Store current prediction globally for feedback
+        let currentInputText = "";
+        let currentPrediction = "";
 
         clearBtn.addEventListener('click', () => {
             userInput.value = "";
@@ -334,12 +359,20 @@
             predictionBadge.style.display = 'none';
             confidenceContainer.style.display = 'none';
             confidenceBar.style.width = '0%';
+            
+            // Hide feedback box on clear
+            feedbackBox.style.display = 'none';
+            feedbackMsg.style.display = 'none';
+            thumbUp.classList.remove('active-up');
+            thumbDown.classList.remove('active-down');
         });
 
-        // --- ASLI API FETCH + TYPEWRITER LOGIC ---
+        // --- API FETCH + TYPEWRITER LOGIC ---
         submitBtn.addEventListener('click', async () => {
             const input = userInput.value;
             if(input.trim() === "") { alert("Please enter some text first!"); return; }
+            
+            currentInputText = input; // Save for feedback
             
             resultBox.style.display = 'block';
             outputText.innerHTML = "Connecting to AI Model... <span class='cursor'></span>"; 
@@ -350,6 +383,7 @@
             predictionBadge.style.display = 'none';
             confidenceContainer.style.display = 'none';
             confidenceBar.style.width = '0%';
+            feedbackBox.style.display = 'none'; // Hide feedback while loading
 
             try {
                 const response = await fetch('/predict', {
@@ -360,6 +394,8 @@
                 
                 const data = await response.json();
                 if (data.error) throw new Error(data.error);
+
+                currentPrediction = data.prediction; // Save for feedback
 
                 const isReal = data.prediction === "Real";
                 const labelText = isReal ? "✅ PREDICTION: REAL" : "🚨 PREDICTION: FAKE";
@@ -396,7 +432,11 @@
                         submitBtn.innerText = "Verify Claim";
                         copyBtn.style.display = 'inline-block'; 
                         
-                        // NAYA: Typewriter khatam hone ke baad history update kar do
+                        // Show feedback box & update history
+                        feedbackBox.style.display = 'block';
+                        thumbUp.classList.remove('active-up');
+                        thumbDown.classList.remove('active-down');
+                        feedbackMsg.style.display = 'none';
                         loadHistory();
                     }
                 }
@@ -407,6 +447,36 @@
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Verify Claim";
             }
+        });
+
+        // --- NAYA: FEEDBACK SUBMIT LOGIC ---
+        async function sendFeedback(type) {
+            try {
+                await fetch('/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        text: currentInputText, 
+                        prediction: currentPrediction,
+                        feedback: type 
+                    })
+                });
+                feedbackMsg.style.display = 'block';
+            } catch (error) {
+                console.log("Feedback failed to send:", error);
+            }
+        }
+
+        thumbUp.addEventListener('click', () => {
+            thumbUp.classList.add('active-up');
+            thumbDown.classList.remove('active-down');
+            sendFeedback('up');
+        });
+
+        thumbDown.addEventListener('click', () => {
+            thumbDown.classList.add('active-down');
+            thumbUp.classList.remove('active-up');
+            sendFeedback('down');
         });
 
         // --- COPY LOGIC ---

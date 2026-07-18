@@ -1,40 +1,43 @@
-from flask import Flask, render_template, request, jsonify
-from src.prediction import predict_news
-from google import genai
 import os
 import re
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
+from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from google import genai
+from dotenv import load_dotenv
 
-# .env file load karna
-load_dotenv()
+# --- Tumhare PyTorch Model ka Import ---
+# DHYAN RAHE: Agar tumhara import function kisi aur naam se hai, toh usko update kar lena.
+# Image ke hisaab se tumhari prediction.py file hai, toh hum wahi assume kar rahe hain.
+from prediction import predict_news 
 
+# --- App Configuration ---
 app = Flask(__name__)
-
-# --- Database Configuration ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///history.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+# --- Gemini API Setup ---
+load_dotenv()
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+
+# --- Database Models ---
 class SearchHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.Text, nullable=False)
-    prediction = db.Column(db.String(10), nullable=False)
+    text = db.Column(db.String(500), nullable=False)
+    prediction = db.Column(db.String(50), nullable=False)
     confidence = db.Column(db.Float, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-with app.app_context():
-    db.create_all()
+class FeedbackData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String(500), nullable=False)
+    prediction = db.Column(db.String(50), nullable=False)
+    feedback_type = db.Column(db.String(10), nullable=False) # 'up' ya 'down'
 
-# API Client Setup
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY)
-
+# --- Routes ---
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
@@ -67,7 +70,6 @@ def predict():
             display_text = f"[Scraped from URL] {text_to_analyze[:100]}..."
 
         # 1. Local PyTorch Model se Prediction lena
-        # Ab yahan error nahi aayega kyunki variable humesha defined rahega
         result, confidence = predict_news(text_to_analyze) 
         
         # 2. Gemini 2.5 Flash se Hinglish Explanation lena
@@ -86,7 +88,6 @@ def predict():
             
     except Exception as e:
         print("Backend Error:", str(e))
-        # Tumhara custom error message style
         return jsonify({"error": f"Kuch galat ho gaya: {str(e)}"}), 500
     
     return jsonify({
@@ -97,19 +98,6 @@ def predict():
 
 @app.route('/history', methods=['GET'])
 def get_history():
-    records = SearchHistory.query.order_by(SearchHistory.timestamp.desc()).limit(5).all()
-    history_data = []
-    for r in records:
-        history_data.append({
-            "text": r.text,
-            "prediction": r.prediction,
-            "confidence": round(r.confidence, 2)
-        })
-    return jsonify(history_data)
-
-# --- NAYA: Recent History Fetch Karne Ka Route ---
-@app.route('/history', methods=['GET'])
-def get_history():
     try:
         # Database se latest 5 searches nikalna (id ke descending order mein)
         recent_searches = SearchHistory.query.order_by(SearchHistory.id.desc()).limit(5).all()
@@ -118,7 +106,7 @@ def get_history():
         for item in recent_searches:
             history_list.append({
                 "id": item.id,
-                "text": item.text[:80] + "..." if len(item.text) > 80 else item.text, # Zyada lamba text truncate karna
+                "text": item.text[:80] + "..." if len(item.text) > 80 else item.text,
                 "prediction": item.prediction,
                 "confidence": item.confidence
             })
@@ -128,5 +116,24 @@ def get_history():
         print("History Fetch Error:", str(e))
         return jsonify({"error": "History laane mein problem hui."}), 500
 
+@app.route('/feedback', methods=['POST'])
+def save_feedback():
+    data = request.get_json()
+    try:
+        new_feedback = FeedbackData(
+            text=data.get('text', ''),
+            prediction=data.get('prediction', ''),
+            feedback_type=data.get('feedback', '')
+        )
+        db.session.add(new_feedback)
+        db.session.commit()
+        return jsonify({"status": "success", "message": "Feedback saved successfully!"})
+    except Exception as e:
+        print("Feedback Error:", str(e))
+        return jsonify({"error": "Feedback save nahi hua."}), 500
+
 if __name__ == '__main__':
+    # Yeh app_context wala code ensure karega ki nayi FeedbackData table Database me ban jaye
+    with app.app_context():
+        db.create_all()  
     app.run(debug=True)
