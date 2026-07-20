@@ -131,6 +131,17 @@ def save_feedback():
     except Exception as e:
         print("Feedback Error:", str(e))
         return jsonify({"error": "Feedback save nahi hua."}), 500
+    
+# --- NAYA: Live Analytics Data Ka Route ---
+@app.route('/analytics', methods=['GET'])
+def get_analytics():
+    try:
+        real_count = SearchHistory.query.filter_by(prediction='Real').count()
+        fake_count = SearchHistory.query.filter_by(prediction='Fake').count()
+        return jsonify({"real": real_count, "fake": fake_count})
+    except Exception as e:
+        print("Analytics Error:", str(e))
+        return jsonify({"error": "Data fetch nahi hua"}), 500
 
 if __name__ == '__main__':
     # Yeh app_context wala code ensure karega ki nayi FeedbackData table Database me ban jaye

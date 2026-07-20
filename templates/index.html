@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Fake News Detector</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- NAYA: Chart.js Library Import -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* --- CSS Variables --- */
         :root {
@@ -49,15 +51,29 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .main-container, .history-container {
+        .main-container, .bottom-container {
             background-color: var(--container-bg); width: 100%;
             max-width: 700px; padding: 40px; border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); text-align: center;
             margin-bottom: 20px;
         }
 
+        /* --- NAYA: Bottom section styling (Chart + History) --- */
+        .bottom-container {
+            display: flex; flex-direction: column; gap: 20px; padding: 25px;
+        }
+        
+        .chart-section {
+            padding-bottom: 20px; border-bottom: 2px solid var(--border-color);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .chart-wrapper {
+            position: relative; height: 200px; width: 100%; max-width: 300px; margin-top: 10px;
+        }
+
         h1 { margin-bottom: 10px; font-size: 28px; font-weight: 600; }
         p.subtitle { color: #7f8c8d; margin-bottom: 25px; font-size: 14px; }
+        h2.section-title { font-size: 18px; font-weight: 600; text-align: left; width: 100%;}
 
         .input-wrapper { position: relative; width: 100%; }
 
@@ -82,8 +98,7 @@
         }
 
         #counter-box {
-            text-align: right; font-size: 12px; color: #7f8c8d;
-            margin-top: 5px; font-weight: 600;
+            text-align: right; font-size: 12px; color: #7f8c8d; margin-top: 5px; font-weight: 600;
         }
         body.dark-mode #counter-box { color: #b2bec3; }
 
@@ -100,7 +115,6 @@
             padding: 12px 15px; font-size: 16px; font-weight: 600;
             color: white; background-color: #e74c3c;
             border: none; border-radius: 8px; cursor: pointer; flex: 1;
-            transition: background-color 0.3s ease;
         }
         .clear-btn:hover { background-color: #c0392b; }
 
@@ -113,109 +127,57 @@
 
         .result-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);
         }
 
         #copy-btn {
-            display: none; background-color: #2ecc71; color: white;
-            border: none; padding: 6px 12px; border-radius: 6px;
-            font-size: 12px; font-weight: 600; cursor: pointer;
+            display: none; background-color: #2ecc71; color: white; border: none; 
+            padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
         }
 
-        #prediction-badge {
-            font-size: 20px; font-weight: bold; margin-bottom: 10px; display: none;
-        }
-        
+        #prediction-badge { font-size: 20px; font-weight: bold; margin-bottom: 10px; display: none; }
         .confidence-container { margin-top: 10px; margin-bottom: 20px; display: none; }
-        .confidence-header {
-            display: flex; justify-content: space-between; font-size: 14px; 
-            font-weight: 600; margin-bottom: 5px;
-        }
-        .progress-bg {
-            background: rgba(0,0,0,0.1); border-radius: 6px; height: 12px; 
-            width: 100%; overflow: hidden;
-        }
+        .confidence-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+        .progress-bg { background: rgba(0,0,0,0.1); border-radius: 6px; height: 12px; width: 100%; overflow: hidden; }
         body.dark-mode .progress-bg { background: rgba(255,255,255,0.1); }
-        .progress-bar {
-            height: 100%; width: 0%; border-radius: 6px; 
-            transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1); 
-        }
+        .progress-bar { height: 100%; width: 0%; border-radius: 6px; transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1); }
 
-        #feedback-box {
-            display: none; margin-top: 20px; padding-top: 15px;
-            border-top: 1px solid var(--border-color); text-align: center;
-        }
+        #feedback-box { display: none; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); text-align: center; }
         .feedback-text { font-size: 14px; margin-bottom: 10px; font-weight: 600; }
-        .feedback-btn {
-            background-color: var(--container-bg); border: 1px solid var(--border-color);
-            color: var(--text-color); padding: 8px 15px; border-radius: 20px;
-            cursor: pointer; font-size: 14px; margin: 0 5px; transition: all 0.2s ease;
-        }
+        .feedback-btn { background-color: var(--container-bg); border: 1px solid var(--border-color); color: var(--text-color); padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 14px; margin: 0 5px; }
         .feedback-btn:hover { background-color: var(--bg-color); transform: scale(1.05); }
         .feedback-btn.active-up { background-color: #2ecc71; color: white; border-color: #2ecc71; }
         .feedback-btn.active-down { background-color: #e74c3c; color: white; border-color: #e74c3c; }
         #feedback-msg { display: none; font-size: 13px; color: #2ecc71; margin-top: 10px; font-weight: 600; }
 
-        .history-container { padding: 25px; text-align: left; }
-        .history-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;}
-        .history-list { list-style: none; }
+        .history-list { list-style: none; text-align: left; width: 100%;}
         .history-item {
             padding: 12px; border: 1px solid var(--border-color);
-            border-radius: 8px; margin-bottom: 10px; font-size: 14px;
+            border-radius: 8px; margin-top: 10px; font-size: 14px;
             display: flex; flex-direction: column; gap: 8px;
             background-color: var(--bg-color);
         }
         .history-top { display: flex; justify-content: space-between; align-items: center; }
-        .history-badge {
-            padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white;
-        }
+        .history-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; }
         .badge-real { background-color: #2ecc71; }
         .badge-fake { background-color: #e74c3c; }
         .history-text { color: var(--text-color); font-style: italic; opacity: 0.9; }
         
-        .cursor {
-            display: inline-block; width: 3px; height: 15px;
-            background-color: var(--text-color); margin-left: 2px;
-            animation: blink 0.7s infinite;
-        }
+        .cursor { display: inline-block; width: 3px; height: 15px; background-color: var(--text-color); margin-left: 2px; animation: blink 0.7s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* --- NAYA: ABOUT MODAL STYLING --- */
+        /* ABOUT MODAL STYLING */
         .footer { margin-top: 10px; font-size: 14px; opacity: 0.8; }
-        #about-link {
-            color: var(--btn-bg); font-weight: 600; text-decoration: none; cursor: pointer; transition: color 0.3s;
-        }
+        #about-link { color: var(--btn-bg); font-weight: 600; text-decoration: none; cursor: pointer; }
         #about-link:hover { color: var(--btn-hover); text-decoration: underline; }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); display: none;
-            align-items: center; justify-content: center; z-index: 1000;
-            opacity: 0; transition: opacity 0.3s ease;
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; align-items: center; justify-content: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
         .modal-overlay.show { display: flex; opacity: 1; }
-        
-        .modal-content {
-            background-color: var(--container-bg); color: var(--text-color);
-            width: 90%; max-width: 550px; padding: 30px; border-radius: 15px;
-            position: relative; text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            transform: translateY(-20px); transition: transform 0.3s ease;
-        }
+        .modal-content { background-color: var(--container-bg); color: var(--text-color); width: 90%; max-width: 550px; padding: 30px; border-radius: 15px; position: relative; text-align: center; transform: translateY(-20px); transition: transform 0.3s ease; }
         .modal-overlay.show .modal-content { transform: translateY(0); }
-        
-        .close-btn {
-            position: absolute; top: 15px; right: 20px; background: none;
-            border: none; font-size: 28px; color: var(--text-color); cursor: pointer;
-            line-height: 1;
-        }
-        .close-btn:hover { color: #e74c3c; }
-
+        .close-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 28px; color: var(--text-color); cursor: pointer; line-height: 1; }
         .tech-list { text-align: left; margin-top: 15px; margin-bottom: 20px; font-size: 14px; }
         .tech-list ul { margin-left: 25px; margin-top: 10px; line-height: 1.8; }
         .dev-info { background-color: var(--bg-color); padding: 15px; border-radius: 8px; font-size: 14px; }
-
     </style>
 </head>
 <body>
@@ -271,20 +233,33 @@
         </div>
     </div>
 
-    <!-- RECENT HISTORY AREA -->
-    <div class="history-container">
-        <h2 class="history-title">🕒 Recent Searches</h2>
-        <ul class="history-list" id="history-list">
-            <li class="history-item">Loading history...</li>
-        </ul>
+    <!-- NAYA: BOTTOM CONTAINER (Chart + History) -->
+    <div class="bottom-container">
+        
+        <!-- Live Analytics Chart -->
+        <div class="chart-section">
+            <h2 class="section-title">📊 Live App Analytics</h2>
+            <div class="chart-wrapper">
+                <canvas id="analyticsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Searches -->
+        <div>
+            <h2 class="section-title">🕒 Recent Searches</h2>
+            <ul class="history-list" id="history-list">
+                <li class="history-item">Loading data...</li>
+            </ul>
+        </div>
+        
     </div>
 
-    <!-- --- NAYA: FOOTER LINK --- -->
+    <!-- FOOTER LINK -->
     <div class="footer">
         <a href="#" id="about-link">Designed by Manish Sharma 🚀</a>
     </div>
 
-    <!-- --- NAYA: ABOUT MODAL (POPUP) --- -->
+    <!-- ABOUT MODAL -->
     <div class="modal-overlay" id="about-modal">
         <div class="modal-content">
             <button class="close-btn" id="close-modal">&times;</button>
@@ -294,11 +269,11 @@
             <div class="tech-list">
                 <strong>💻 Tech Stack Integration:</strong>
                 <ul>
-                    <li><b>Frontend:</b> HTML5, CSS3, Vanilla JS (Web Speech API)</li>
-                    <li><b>Backend API:</b> Python, Flask, SQLite (Search & Feedback DB)</li>
+                    <li><b>Frontend:</b> HTML5, CSS3, Chart.js, Vanilla JS</li>
+                    <li><b>Backend API:</b> Python, Flask, SQLite</li>
                     <li><b>Machine Learning:</b> PyTorch (Local NLP Model Classification)</li>
-                    <li><b>Generative AI:</b> Google Gemini 2.5 Flash API (Reasoning)</li>
-                    <li><b>Data Pipeline:</b> BeautifulSoup (URL Web Scraping)</li>
+                    <li><b>Generative AI:</b> Google Gemini 2.5 Flash API</li>
+                    <li><b>Data Pipeline:</b> BeautifulSoup (Web Scraping)</li>
                 </ul>
             </div>
 
@@ -316,8 +291,7 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
         const body = document.body;
         if (localStorage.getItem('theme') === 'dark') {
-            body.classList.add('dark-mode');
-            themeToggleBtn.innerText = '☀️ Light Mode';
+            body.classList.add('dark-mode'); themeToggleBtn.innerText = '☀️ Light Mode';
         }
         themeToggleBtn.addEventListener('click', () => {
             body.classList.toggle('dark-mode');
@@ -328,7 +302,41 @@
             }
         });
 
-        // --- HISTORY FETCH LOGIC ---
+        // --- NAYA: CHART LOGIC ---
+        let myChart;
+        async function loadAnalytics() {
+            try {
+                const response = await fetch('/analytics');
+                const data = await response.json();
+                
+                const ctx = document.getElementById('analyticsChart').getContext('2d');
+                
+                // Agar chart pehle se hai, toh destroy karke naya banao
+                if (myChart) { myChart.destroy(); }
+                
+                myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['✅ Real News', '🚨 Fake News'],
+                        datasets: [{
+                            data: [data.real || 0, data.fake || 0],
+                            backgroundColor: ['#2ecc71', '#e74c3c'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: body.classList.contains('dark-mode') ? '#fff' : '#333' } }
+                        }
+                    }
+                });
+            } catch (error) { console.log("Chart load failed", error); }
+        }
+
+        // --- HISTORY LOGIC ---
         const historyList = document.getElementById('history-list');
         async function loadHistory() {
             try {
@@ -354,11 +362,14 @@
                     `;
                     historyList.appendChild(li);
                 });
-            } catch (error) {
-                historyList.innerHTML = "<li class='history-item'>Failed to load history.</li>";
-            }
+            } catch (error) { historyList.innerHTML = "<li class='history-item'>Failed to load history.</li>"; }
         }
-        window.addEventListener('DOMContentLoaded', loadHistory);
+        
+        // Load data on page start
+        window.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+            loadAnalytics();
+        });
 
         // --- COUNTER LOGIC ---
         const userInput = document.getElementById('user-input');
@@ -380,14 +391,9 @@
             micBtn.addEventListener('click', () => recognition.start());
             recognition.onstart = () => micBtn.classList.add('recording');
             recognition.onspeechend = () => { recognition.stop(); micBtn.classList.remove('recording'); };
-            recognition.onresult = (event) => {
-                userInput.value += (userInput.value ? " " : "") + event.results[0][0].transcript; 
-                updateCounter();
-            };
+            recognition.onresult = (event) => { userInput.value += (userInput.value ? " " : "") + event.results[0][0].transcript; updateCounter(); };
             recognition.onerror = () => micBtn.classList.remove('recording');
-        } else {
-            micBtn.style.display = "none";
-        }
+        } else { micBtn.style.display = "none"; }
 
         // --- CLEAR & FEEDBACK VARIABLES ---
         const clearBtn = document.getElementById('clear-btn');
@@ -405,8 +411,7 @@
         const thumbDown = document.getElementById('thumb-down');
         const feedbackMsg = document.getElementById('feedback-msg');
         
-        let currentInputText = "";
-        let currentPrediction = "";
+        let currentInputText = ""; let currentPrediction = "";
 
         clearBtn.addEventListener('click', () => {
             userInput.value = ""; updateCounter();
@@ -474,7 +479,11 @@
                         copyBtn.style.display = 'inline-block'; 
                         feedbackBox.style.display = 'block';
                         thumbUp.classList.remove('active-up'); thumbDown.classList.remove('active-down');
-                        feedbackMsg.style.display = 'none'; loadHistory();
+                        feedbackMsg.style.display = 'none'; 
+                        
+                        // NAYA: Prediction ke baad History aur Chart dono refresh karo
+                        loadHistory();
+                        loadAnalytics();
                     }
                 }
                 typeWriter();
@@ -495,13 +504,8 @@
                 feedbackMsg.style.display = 'block';
             } catch (error) { console.log("Feedback error:", error); }
         }
-
-        thumbUp.addEventListener('click', () => {
-            thumbUp.classList.add('active-up'); thumbDown.classList.remove('active-down'); sendFeedback('up');
-        });
-        thumbDown.addEventListener('click', () => {
-            thumbDown.classList.add('active-down'); thumbUp.classList.remove('active-up'); sendFeedback('down');
-        });
+        thumbUp.addEventListener('click', () => { thumbUp.classList.add('active-up'); thumbDown.classList.remove('active-down'); sendFeedback('up'); });
+        thumbDown.addEventListener('click', () => { thumbDown.classList.add('active-down'); thumbUp.classList.remove('active-up'); sendFeedback('down'); });
 
         // --- COPY LOGIC ---
         copyBtn.addEventListener('click', () => {
@@ -512,28 +516,13 @@
             });
         });
 
-        // --- NAYA: ABOUT MODAL LOGIC ---
+        // --- ABOUT MODAL LOGIC ---
         const aboutLink = document.getElementById('about-link');
         const aboutModal = document.getElementById('about-modal');
         const closeModal = document.getElementById('close-modal');
-
-        // Open modal
-        aboutLink.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevents page jump
-            aboutModal.classList.add('show');
-        });
-
-        // Close using X button
-        closeModal.addEventListener('click', () => {
-            aboutModal.classList.remove('show');
-        });
-
-        // Close when clicking anywhere outside the modal content
-        window.addEventListener('click', (e) => {
-            if (e.target === aboutModal) {
-                aboutModal.classList.remove('show');
-            }
-        });
+        aboutLink.addEventListener('click', (e) => { e.preventDefault(); aboutModal.classList.add('show'); });
+        closeModal.addEventListener('click', () => { aboutModal.classList.remove('show'); });
+        window.addEventListener('click', (e) => { if (e.target === aboutModal) { aboutModal.classList.remove('show'); } });
     </script>
 </body>
 </html>
