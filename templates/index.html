@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Fake News Detector</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <!-- NAYA: Chart.js Library Import -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* --- CSS Variables --- */
@@ -58,7 +57,6 @@
             margin-bottom: 20px;
         }
 
-        /* --- NAYA: Bottom section styling (Chart + History) --- */
         .bottom-container {
             display: flex; flex-direction: column; gap: 20px; padding: 25px;
         }
@@ -130,10 +128,21 @@
             margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);
         }
 
+        .result-actions {
+            display: flex; gap: 8px;
+        }
+
         #copy-btn {
             display: none; background-color: #2ecc71; color: white; border: none; 
             padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
         }
+
+        /* --- NAYA: WhatsApp Button Styling --- */
+        #whatsapp-btn {
+            display: none; background-color: #25D366; color: white; border: none; 
+            padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        #whatsapp-btn:hover { background-color: #128C7E; }
 
         #prediction-badge { font-size: 20px; font-weight: bold; margin-bottom: 10px; display: none; }
         .confidence-container { margin-top: 10px; margin-bottom: 20px; display: none; }
@@ -208,7 +217,11 @@
         <div id="result-box">
             <div class="result-header">
                 <strong>AI Analysis Result:</strong>
-                <button id="copy-btn">📋 Copy</button>
+                <div class="result-actions">
+                    <button id="copy-btn">📋 Copy</button>
+                    <!-- NAYA: WhatsApp Button -->
+                    <button id="whatsapp-btn">💬 WhatsApp</button>
+                </div>
             </div>
             
             <div id="prediction-badge"></div>
@@ -233,10 +246,8 @@
         </div>
     </div>
 
-    <!-- NAYA: BOTTOM CONTAINER (Chart + History) -->
+    <!-- BOTTOM CONTAINER (Chart + History) -->
     <div class="bottom-container">
-        
-        <!-- Live Analytics Chart -->
         <div class="chart-section">
             <h2 class="section-title">📊 Live App Analytics</h2>
             <div class="chart-wrapper">
@@ -244,14 +255,12 @@
             </div>
         </div>
 
-        <!-- Recent Searches -->
         <div>
             <h2 class="section-title">🕒 Recent Searches</h2>
             <ul class="history-list" id="history-list">
                 <li class="history-item">Loading data...</li>
             </ul>
         </div>
-        
     </div>
 
     <!-- FOOTER LINK -->
@@ -302,36 +311,21 @@
             }
         });
 
-        // --- NAYA: CHART LOGIC ---
+        // --- CHART LOGIC ---
         let myChart;
         async function loadAnalytics() {
             try {
                 const response = await fetch('/analytics');
                 const data = await response.json();
-                
                 const ctx = document.getElementById('analyticsChart').getContext('2d');
-                
-                // Agar chart pehle se hai, toh destroy karke naya banao
                 if (myChart) { myChart.destroy(); }
-                
                 myChart = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
                         labels: ['✅ Real News', '🚨 Fake News'],
-                        datasets: [{
-                            data: [data.real || 0, data.fake || 0],
-                            backgroundColor: ['#2ecc71', '#e74c3c'],
-                            borderWidth: 0,
-                            hoverOffset: 4
-                        }]
+                        datasets: [{ data: [data.real || 0, data.fake || 0], backgroundColor: ['#2ecc71', '#e74c3c'], borderWidth: 0, hoverOffset: 4 }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { color: body.classList.contains('dark-mode') ? '#fff' : '#333' } }
-                        }
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: body.classList.contains('dark-mode') ? '#fff' : '#333' } } } }
                 });
             } catch (error) { console.log("Chart load failed", error); }
         }
@@ -343,42 +337,26 @@
                 const response = await fetch('/history');
                 const data = await response.json();
                 historyList.innerHTML = ""; 
-                if (data.length === 0) {
-                    historyList.innerHTML = "<li class='history-item'>No recent searches found.</li>";
-                    return;
-                }
+                if (data.length === 0) { historyList.innerHTML = "<li class='history-item'>No recent searches found.</li>"; return; }
                 data.forEach(item => {
                     const isReal = item.prediction === "Real";
                     const badgeClass = isReal ? "badge-real" : "badge-fake";
                     const badgeText = isReal ? "✅ REAL" : "🚨 FAKE";
-                    const li = document.createElement('li');
-                    li.className = 'history-item';
-                    li.innerHTML = `
-                        <div class="history-top">
-                            <span class="history-badge ${badgeClass}">${badgeText}</span>
-                            <span style="font-size: 12px; font-weight: 600;">Conf: ${item.confidence}%</span>
-                        </div>
-                        <div class="history-text">"${item.text}"</div>
-                    `;
+                    const li = document.createElement('li'); li.className = 'history-item';
+                    li.innerHTML = `<div class="history-top"><span class="history-badge ${badgeClass}">${badgeText}</span><span style="font-size: 12px; font-weight: 600;">Conf: ${item.confidence}%</span></div><div class="history-text">"${item.text}"</div>`;
                     historyList.appendChild(li);
                 });
             } catch (error) { historyList.innerHTML = "<li class='history-item'>Failed to load history.</li>"; }
         }
         
-        // Load data on page start
-        window.addEventListener('DOMContentLoaded', () => {
-            loadHistory();
-            loadAnalytics();
-        });
+        window.addEventListener('DOMContentLoaded', () => { loadHistory(); loadAnalytics(); });
 
         // --- COUNTER LOGIC ---
         const userInput = document.getElementById('user-input');
         const charCount = document.getElementById('char-count');
         const wordCount = document.getElementById('word-count');
         function updateCounter() {
-            const text = userInput.value;
-            charCount.innerText = text.length;
-            wordCount.innerText = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            const text = userInput.value; charCount.innerText = text.length; wordCount.innerText = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
         }
         userInput.addEventListener('input', updateCounter);
 
@@ -386,8 +364,7 @@
         const micBtn = document.getElementById('mic-btn');
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
-            const recognition = new SpeechRecognition();
-            recognition.continuous = false; recognition.lang = 'hi-IN'; 
+            const recognition = new SpeechRecognition(); recognition.continuous = false; recognition.lang = 'hi-IN'; 
             micBtn.addEventListener('click', () => recognition.start());
             recognition.onstart = () => micBtn.classList.add('recording');
             recognition.onspeechend = () => { recognition.stop(); micBtn.classList.remove('recording'); };
@@ -395,12 +372,13 @@
             recognition.onerror = () => micBtn.classList.remove('recording');
         } else { micBtn.style.display = "none"; }
 
-        // --- CLEAR & FEEDBACK VARIABLES ---
+        // --- CLEAR & BUTTON VARIABLES ---
         const clearBtn = document.getElementById('clear-btn');
         const resultBox = document.getElementById('result-box');
         const outputText = document.getElementById('output-text');
         const submitBtn = document.getElementById('submit-btn');
         const copyBtn = document.getElementById('copy-btn');
+        const whatsappBtn = document.getElementById('whatsapp-btn'); // NAYA
         const predictionBadge = document.getElementById('prediction-badge');
         const confidenceContainer = document.getElementById('confidence-container');
         const confidenceBar = document.getElementById('confidence-bar');
@@ -417,10 +395,10 @@
             userInput.value = ""; updateCounter();
             resultBox.style.display = 'none'; outputText.innerHTML = "";
             submitBtn.disabled = false; submitBtn.innerText = "Verify Claim";
-            predictionBadge.style.display = 'none';
-            confidenceContainer.style.display = 'none'; confidenceBar.style.width = '0%';
+            predictionBadge.style.display = 'none'; confidenceContainer.style.display = 'none'; confidenceBar.style.width = '0%';
             feedbackBox.style.display = 'none'; feedbackMsg.style.display = 'none';
             thumbUp.classList.remove('active-up'); thumbDown.classList.remove('active-down');
+            whatsappBtn.style.display = 'none'; // Hide WhatsApp button on clear
         });
 
         // --- API FETCH + TYPEWRITER LOGIC ---
@@ -432,8 +410,8 @@
             
             resultBox.style.display = 'block';
             outputText.innerHTML = "Connecting to AI Model... <span class='cursor'></span>"; 
-            copyBtn.style.display = 'none'; submitBtn.disabled = true; 
-            submitBtn.innerText = "Analyzing Backend...";
+            copyBtn.style.display = 'none'; whatsappBtn.style.display = 'none'; // Hide during load
+            submitBtn.disabled = true; submitBtn.innerText = "Analyzing Backend...";
             predictionBadge.style.display = 'none'; confidenceContainer.style.display = 'none';
             confidenceBar.style.width = '0%'; feedbackBox.style.display = 'none'; 
 
@@ -452,57 +430,39 @@
                 const labelText = isReal ? "✅ PREDICTION: REAL" : "🚨 PREDICTION: FAKE";
                 const barColor = isReal ? "#2ecc71" : "#e74c3c"; 
                 
-                predictionBadge.innerText = labelText;
-                predictionBadge.style.color = barColor;
-                predictionBadge.style.display = 'block';
+                predictionBadge.innerText = labelText; predictionBadge.style.color = barColor; predictionBadge.style.display = 'block';
+                confidencePercentage.innerText = `${data.confidence}%`; confidenceContainer.style.display = 'block';
                 
-                confidencePercentage.innerText = `${data.confidence}%`;
-                confidenceContainer.style.display = 'block';
-                
-                setTimeout(() => {
-                    confidenceBar.style.backgroundColor = barColor;
-                    confidenceBar.style.width = `${data.confidence}%`;
-                }, 100);
+                setTimeout(() => { confidenceBar.style.backgroundColor = barColor; confidenceBar.style.width = `${data.confidence}%`; }, 100);
                 
                 const fullText = `✨ AI Reasoning:\n${data.explanation}`;
-                outputText.innerHTML = ""; 
-                let index = 0;
+                outputText.innerHTML = ""; let index = 0;
 
                 function typeWriter() {
                     if (index < fullText.length) {
-                        if (fullText.charAt(index) === '\n') { outputText.innerHTML += '<br>'; } 
-                        else { outputText.innerHTML += fullText.charAt(index); }
+                        if (fullText.charAt(index) === '\n') { outputText.innerHTML += '<br>'; } else { outputText.innerHTML += fullText.charAt(index); }
                         index++; setTimeout(typeWriter, 15); 
                     } else {
                         outputText.innerHTML += '<span class="cursor"></span>';
                         submitBtn.disabled = false; submitBtn.innerText = "Verify Claim";
                         copyBtn.style.display = 'inline-block'; 
+                        whatsappBtn.style.display = 'inline-block'; // Show WhatsApp button when done
                         feedbackBox.style.display = 'block';
                         thumbUp.classList.remove('active-up'); thumbDown.classList.remove('active-down');
                         feedbackMsg.style.display = 'none'; 
-                        
-                        // NAYA: Prediction ke baad History aur Chart dono refresh karo
-                        loadHistory();
-                        loadAnalytics();
+                        loadHistory(); loadAnalytics();
                     }
                 }
                 typeWriter();
 
             } catch (error) {
-                outputText.innerHTML = `⚠️ Backend Error: ${error.message}`;
-                submitBtn.disabled = false; submitBtn.innerText = "Verify Claim";
+                outputText.innerHTML = `⚠️ Backend Error: ${error.message}`; submitBtn.disabled = false; submitBtn.innerText = "Verify Claim";
             }
         });
 
         // --- FEEDBACK LOGIC ---
         async function sendFeedback(type) {
-            try {
-                await fetch('/feedback', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: currentInputText, prediction: currentPrediction, feedback: type })
-                });
-                feedbackMsg.style.display = 'block';
-            } catch (error) { console.log("Feedback error:", error); }
+            try { await fetch('/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: currentInputText, prediction: currentPrediction, feedback: type }) }); feedbackMsg.style.display = 'block'; } catch (error) { console.log("Feedback error:", error); }
         }
         thumbUp.addEventListener('click', () => { thumbUp.classList.add('active-up'); thumbDown.classList.remove('active-down'); sendFeedback('up'); });
         thumbDown.addEventListener('click', () => { thumbDown.classList.add('active-down'); thumbUp.classList.remove('active-up'); sendFeedback('down'); });
@@ -516,10 +476,25 @@
             });
         });
 
+        // --- NAYA: WHATSAPP SHARE LOGIC ---
+        whatsappBtn.addEventListener('click', () => {
+            const claim = userInput.value;
+            const badgeText = predictionBadge.innerText;
+            const confText = confidencePercentage.innerText;
+            const explanationText = outputText.innerText;
+            
+            // Format WhatsApp Message with bolding
+            const whatsappMessage = `*AI Fact Check Result* 🔍\n\n*Claim:* "${claim}"\n\n*Result:* ${badgeText} (Confidence: ${confText})\n\n*Reasoning:*\n${explanationText}\n\n_Checked via AI Fake News Detector by Manish Sharma_`;
+            
+            // Convert text to URL encoding
+            const encodedMessage = encodeURIComponent(whatsappMessage);
+            
+            // WhatsApp API link open in new tab
+            window.open(`https://api.whatsapp.com/send?text=${encodedMessage}`, '_blank');
+        });
+
         // --- ABOUT MODAL LOGIC ---
-        const aboutLink = document.getElementById('about-link');
-        const aboutModal = document.getElementById('about-modal');
-        const closeModal = document.getElementById('close-modal');
+        const aboutLink = document.getElementById('about-link'); const aboutModal = document.getElementById('about-modal'); const closeModal = document.getElementById('close-modal');
         aboutLink.addEventListener('click', (e) => { e.preventDefault(); aboutModal.classList.add('show'); });
         closeModal.addEventListener('click', () => { aboutModal.classList.remove('show'); });
         window.addEventListener('click', (e) => { if (e.target === aboutModal) { aboutModal.classList.remove('show'); } });
