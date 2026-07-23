@@ -1,90 +1,82 @@
-# 📰 AI Fake News Detector (Hindi & Hinglish)
+# 🚀 AI Fake News Detector
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
-![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-ee4c2c)
-![Flask](https://img.shields.io/badge/Flask-Backend-000000)
-![Status](https://img.shields.io/badge/Status-Completed-success)
+An end-to-end Full-Stack Machine Learning web application designed to detect, analyze, and explain fake news using Advanced NLP, PyTorch, and Google Gemini 2.5 Flash Generative AI. 
 
-A highly accurate, dual-embedding machine learning project designed to detect fake news claims in pure Hindi and code-mixed Hinglish text. It utilizes a state-of-the-art NLP pipeline with a modern, responsive web interface.
+This project goes beyond simple classification by providing logical reasoning for its predictions, extracting text directly from live URLs, and visualizing app analytics in real-time.
 
 ---
 
-## 🚀 Key Features
+## ✨ Key Features
 
-* **Bilingual NLP Support:** Capable of understanding and processing both Hindi and Hinglish (code-mixed) textual data.
-* **Dual-Embedding Architecture:** Combines the power of **XLM-RoBERTa** (Cross-lingual understanding) and **Google's MuRIL** (specifically pre-trained on Indian languages) for deep contextual analysis.
-* **Modern Web Interface:** A clean, card-based responsive UI with smooth animations and dynamic result rendering.
-* **Real-time Processing:** Asynchronous backend calls using JavaScript `fetch` API with interactive loading states (Spinners) for better User Experience (UX).
-
----
-
-## 🛠️ Tech Stack
-
-### Machine Learning & NLP
-* **Frameworks:** PyTorch, HuggingFace Transformers
-* **Models:** `xlm-roberta-base`, `google/muril-base-cased`
-* **Data Processing:** Pandas, Scikit-learn, SentencePiece
-
-### Backend & API
-* **Framework:** Flask (Python)
-* **API Architecture:** RESTful structure accepting JSON payloads.
-
-### Frontend
-* **Technologies:** HTML5, CSS3, Vanilla JavaScript
-* **Design:** Custom CSS with Google Fonts (Poppins), fully responsive layout.
+* **🧠 Deep Learning + GenAI Validation:** Uses a local PyTorch NLP model for initial classification and Google Gemini 2.5 Flash for generating logical, easy-to-understand explanations in Hinglish.
+* **🌐 Live URL Web Scraping:** Paste any news article link. The system automatically scrapes the main text using `BeautifulSoup` and verifies the claim.
+* **🎤 Voice Input Integration:** Hands-free operation using the Web Speech API to dictate news claims directly in Hindi/Hinglish.
+* **📊 Real-Time Analytics Dashboard:** A live, dynamic Donut Chart (powered by `Chart.js`) showing the ratio of Real vs. Fake news checked on the platform.
+* **📲 WhatsApp Viral Sharing:** A dedicated button to format the AI's prediction, confidence score, and detailed reasoning, ready to be forwarded instantly on WhatsApp to curb misinformation.
+* **🗄️ Database Integration & History:** Powered by SQLite and SQLAlchemy to maintain a session history of recent searches.
+* **👍👎 ML Data Collection Pipeline:** Built-in user feedback mechanism to rate the AI's accuracy, storing data for future model retraining.
+* **🌓 UI/UX:** Fully responsive, modern UI with Dark/Light mode toggle, dynamic typewriter effects, and an interactive "Architecture Modal".
 
 ---
 
-## ⚙️ Installation & Setup
+## 💻 Tech Stack
 
-Follow these steps to run the project locally on your machine:
+**Frontend (Client-Side)**
+* HTML5, CSS3, Vanilla JavaScript
+* Chart.js (Data Visualization)
+* Web Speech API (Voice Recognition)
 
-**1. Clone the repository**
-```bash
-git clone [https://github.com/your-username/fake_news_detector.git](https://github.com/your-username/fake_news_detector.git)
-cd fake_news_detector
-```
+**Backend (Server-Side)**
+* Python 3
+* Flask (Web Framework)
+* SQLite & Flask-SQLAlchemy (Database)
+* BeautifulSoup4 (Web Scraping & Data Extraction)
 
-**2. Install dependencies**
-Make sure you have Python installed, then run:
-```bash
-pip install -r requirements.txt
-```
+**Machine Learning & AI**
+* PyTorch (Text Classification Model)
+* Google Gemini API (Generative Reasoning)
 
-**3. Add the Pre-trained Model**
-* Due to GitHub's file size limits, the trained model (`dual_embedding_model.pth`) is not included in the repository.
-* Place your trained `.pth` file inside the `models/` directory.
+---
 
-**4. Run the Flask Server**
-```bash
+## ⚙️ Installation & Setup Guide
+
+Follow these steps to run the project on your local machine:
+
+**1. Clone the Repository**
+git clone https://github.com/the-miz-4u/Fake_News_Detector.git
+cd Fake_News_Detector
+
+**2. Create a Virtual Environment (Recommended)**
+python -m venv venv
+venv\Scripts\activate  # For Windows
+# source venv/bin/activate  # For Mac/Linux
+
+**3. Install Dependencies**
+pip install flask flask-sqlalchemy requests beautifulsoup4 google-genai python-dotenv torch torchvision torchaudio
+
+**4. Set Up Environment Variables**
+Create a file named `.env` in the root directory and add your Google Gemini API key:
+GEMINI_API_KEY=your_actual_api_key_here
+
+**5. Run the Application**
 python app.py
-```
 
-**5. Access the Web App**
-Open your browser and navigate to: `http://127.0.0.1:5000`
+Open your web browser and go to: `http://127.0.0.1:5000/`
 
 ---
 
-## 📂 Project Structure
+## 🏗️ Future Scope
 
-
-```text
-fake_news_detector/
-│
-├── models/
-│   └── dual_embedding_model.pth    # Trained PyTorch model (Local only)
-│
-├── templates/
-│   └── index.html                  # Modern Frontend UI
-│
-├── app.py                          # Flask Backend Application
-├── requirements.txt                # Project Dependencies
-├── .gitignore                      # Git ignore rules (excluding .pth)
-└── README.md                       # Project Documentation
-```
+* **Admin Dashboard:** To export collected user feedback (SQLite to CSV) for retraining the primary NLP model.
+* **Multi-lingual Support:** Extending scraping and classification to regional Indian languages.
+* **Browser Extension:** Checking news directly from WhatsApp Web or Facebook via a Chrome Extension.
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Developer Profile
 
 **Manish Sharma**  
+*B.Tech in Computer Science and Engineering (2023 - 2027)*  
+*University of Engineering and Management (UEM), Jaipur*  
+
+Passionate about Software Engineering, Machine Learning (NLP/LLMs), and building Full-Stack scalable systems.
